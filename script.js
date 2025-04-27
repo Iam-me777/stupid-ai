@@ -28,7 +28,7 @@ function drawStone(x, y, color) {
 }
 
 function isCaptured(x, y, color) {
-  // 해당 위치에 돌을 두었을 때, 상대 돌이 잡히는지 확인하는 함수
+  // 흰돌을 잡는 함수, 간단하게 잡을 수 있는 경우만 체크
   const directions = [
     [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
@@ -36,33 +36,14 @@ function isCaptured(x, y, color) {
   
   let captured = false;
   
-  // 상대방 돌의 색깔
   const enemyColor = color === 'black' ? 'white' : 'black';
 
   for (const [dx, dy] of directions) {
     const nx = x + dx;
     const ny = y + dy;
-    
-    // 범위 체크
+
     if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] === enemyColor) {
-      // 상대 돌이 있다면, 해당 방향으로 다른 돌이 있는지 확인
-      let chainLength = 1;
-      let checkX = nx + dx;
-      let checkY = ny + dy;
-
-      while (checkX >= 0 && checkY >= 0 && checkX < size && checkY < size) {
-        if (stones[checkX][checkY] === enemyColor) {
-          chainLength++;
-        } else {
-          break;
-        }
-        checkX += dx;
-        checkY += dy;
-      }
-
-      if (chainLength >= 2) {
-        captured = true;
-      }
+      captured = true;
     }
   }
 
@@ -87,47 +68,26 @@ canvas.addEventListener('click', (e) => {
 
 function aiMove() {
   let bestMove = null;
-  let bestScore = -Infinity;
 
-  // AI가 가장 좋은 자리를 선택하는 로직
+  // AI는 그냥 랜덤으로 돌을 놓을 거야
+  let availableMoves = [];
+
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       if (!stones[i][j]) {
-        // 돌을 놓을 수 있는 자리
-        stones[i][j] = 'white'; // 일단 돌 놓고
-        let score = evaluateMove(i, j); // 평가 함수 호출
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = [i, j];
-        }
-        stones[i][j] = null; // 돌 취소
+        availableMoves.push([i, j]);
       }
     }
   }
 
-  if (bestMove) {
-    const [x, y] = bestMove;
+  if (availableMoves.length > 0) {
+    const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    const [x, y] = randomMove;
     stones[x][y] = 'white';
     drawStone(x + 1, y + 1, 'white');
   }
 
   playerTurn = true;
-}
-
-function evaluateMove(x, y) {
-  let score = 0;
-
-  // AI가 돌을 놓았을 때 얻는 점수 계산
-  if (isCaptured(x, y, 'black')) {
-    score += 10;  // 상대 돌을 잡을 수 있는 곳
-  }
-
-  // AI가 좀 더 중앙으로 가는 경향을 갖게 유도
-  if (x > size / 3 && x < (size * 2) / 3 && y > size / 3 && y < (size * 2) / 3) {
-    score += 5;  // 중앙 근처일수록 점수 증가
-  }
-  
-  return score;
 }
 
 drawBoard();
