@@ -28,7 +28,6 @@ function drawStone(x, y, color) {
 }
 
 function isCaptured(x, y, color) {
-  // 흰돌을 잡는 로직을 간단히 처리
   const directions = [
     [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
@@ -88,7 +87,6 @@ function getBestMove() {
 function countCapturedStones(x, y, color) {
   let capturedCount = 0;
 
-  // 상대 돌을 잡을 수 있는지 체크
   const directions = [
     [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
@@ -111,7 +109,6 @@ function countCapturedStones(x, y, color) {
       ny += dy;
     }
 
-    // 2개 이상 연속된 적 돌이 있으면 잡히게 됨
     if (chainLength > 1) {
       capturedCount += chainLength;
     }
@@ -154,3 +151,4 @@ function aiMove() {
 }
 
 drawBoard();
+
