@@ -37,8 +37,8 @@ function isCaptured(x, y, color) {
   for (const [dx, dy] of directions) {
     const nx = x + dx;
     const ny = y + dy;
-    if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] !== color) {
-      // 먹을 수 있는 상대 돌 발견
+    if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] !== color && stones[nx][ny] !== null) {
+      // 상대 돌 발견, 상대 돌이 빈 칸을 둘 때
       return true;
     }
   }
@@ -102,3 +102,4 @@ function evaluateMove(x, y) {
 }
 
 drawBoard();
+
