@@ -18,18 +18,24 @@ for (let row = 0; row < size; row++) {
     }
 }
 
-// 격자선 추가
-for (let i = 0; i < size; i++) {
-    const horizontalLine = document.createElement('div');
-    horizontalLine.classList.add('grid-line', 'horizontal-line');
-    horizontalLine.style.top = `${i * 30}px`;
-    board.appendChild(horizontalLine);
+// 바둑판에 격자선 추가
+function addGridLines() {
+    for (let i = 0; i < size; i++) {
+        // 수평선
+        const horizontalLine = document.createElement('div');
+        horizontalLine.classList.add('grid-line', 'horizontal-line');
+        horizontalLine.style.top = `${i * 30}px`;
+        board.appendChild(horizontalLine);
 
-    const verticalLine = document.createElement('div');
-    verticalLine.classList.add('grid-line', 'vertical-line');
-    verticalLine.style.left = `${i * 30}px`;
-    board.appendChild(verticalLine);
+        // 수직선
+        const verticalLine = document.createElement('div');
+        verticalLine.classList.add('grid-line', 'vertical-line');
+        verticalLine.style.left = `${i * 30}px`;
+        board.appendChild(verticalLine);
+    }
 }
+
+addGridLines(); // 격자선 그리기
 
 // 바둑돌 놓기
 let currentPlayer = 'black'; // 처음에는 검은 돌
