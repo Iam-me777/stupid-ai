@@ -5,6 +5,8 @@ const gridSize = canvas.width / (size + 1);
 const stones = Array.from({ length: size }, () => Array(size).fill(null));
 let playerTurn = true; // true = 너(흑), false = AI(백)
 
+const stoneSound = document.getElementById('stoneSound');  // 바둑돌 소리
+
 function drawBoard() {
   for (let i = 1; i <= size; i++) {
     ctx.beginPath();
@@ -22,6 +24,7 @@ function drawStone(x, y, color) {
   ctx.fillStyle = color;
   ctx.fill();
   ctx.stroke();
+  stoneSound.play();  // 바둑돌 소리 재생
 }
 
 canvas.addEventListener('click', (e) => {
@@ -37,7 +40,7 @@ canvas.addEventListener('click', (e) => {
   drawStone(x, y, 'black');
   playerTurn = false;
 
-  setTimeout(aiMove, 500); // AI 살짝 딜레이
+  setTimeout(aiMove, 500); // AI 딜레이
 });
 
 function aiMove() {
@@ -53,7 +56,7 @@ function aiMove() {
 
   if (empty.length === 0) return;
 
-  // 무지성 랜덤에서 가끔 바보같은 선택
+  // AI가 돌을 두기 가장 빈 곳 찾아서 둔다
   const [i, j] = empty[Math.floor(Math.random() * empty.length)];
   stones[i][j] = 'white';
   drawStone(i + 1, j + 1, 'white');
