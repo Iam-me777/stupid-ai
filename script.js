@@ -27,22 +27,23 @@ function drawStone(x, y, color) {
   stoneSound.play();  // 바둑돌 소리 재생
 }
 
-function isCaptured(x, y, color) {
-  // 가로, 세로, 대각선으로 인접한 돌들을 검사
+function checkCapture(x, y, color) {
   const directions = [
-    [-1, 0], [1, 0], [0, -1], [0, 1],  // 가로, 세로
+    [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
   ];
+  
+  let captured = false;
 
   for (const [dx, dy] of directions) {
     const nx = x + dx;
     const ny = y + dy;
+    
     if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] !== color && stones[nx][ny] !== null) {
-      // 상대 돌 발견, 상대 돌이 빈 칸을 둘 때
-      return true;
+      captured = true;
     }
   }
-  return false;
+  return captured;
 }
 
 canvas.addEventListener('click', (e) => {
@@ -91,13 +92,13 @@ function aiMove() {
 }
 
 function evaluateMove(x, y) {
-  // AI의 승리 가능성을 고려해 점수 계산
   let score = 0;
 
-  if (isCaptured(x, y, 'black')) {
-    score += 10; // 상대 돌을 잡을 수 있으면 높은 점수
+  // AI가 돌을 놓았을 때 얻는 점수 계산
+  if (checkCapture(x, y, 'black')) {
+    score += 10;  // 상대 돌을 잡을 수 있는 곳
   }
-
+  
   return score;
 }
 
