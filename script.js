@@ -28,22 +28,34 @@ function drawStone(x, y, color) {
 }
 
 function isCaptured(x, y, color) {
-  // 흰돌을 잡는 함수, 간단하게 잡을 수 있는 경우만 체크
+  // 흰돌을 잡는 로직을 간단히 처리
   const directions = [
     [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
   ];
   
-  let captured = false;
-  
   const enemyColor = color === 'black' ? 'white' : 'black';
+  let captured = false;
 
+  // 기본적으로 한 방향으로 연속된 적 돌이 2개 이상이면 잡힌다
   for (const [dx, dy] of directions) {
-    const nx = x + dx;
-    const ny = y + dy;
+    let chainLength = 0;
+    let nx = x + dx;
+    let ny = y + dy;
 
-    if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] === enemyColor) {
-      captured = true;
+    while (nx >= 0 && ny >= 0 && nx < size && ny < size) {
+      if (stones[nx][ny] === enemyColor) {
+        chainLength++;
+      } else {
+        break;
+      }
+      nx += dx;
+      ny += dy;
+    }
+
+    if (chainLength > 1) {
+      captured = true; // 잡힌 돌이 있으면 true
+      break;
     }
   }
 
@@ -69,7 +81,7 @@ canvas.addEventListener('click', (e) => {
 function aiMove() {
   let bestMove = null;
 
-  // AI는 그냥 랜덤으로 돌을 놓을 거야
+  // AI는 가장 빈 곳에 놓는 간단한 로직
   let availableMoves = [];
 
   for (let i = 0; i < size; i++) {
@@ -80,11 +92,17 @@ function aiMove() {
     }
   }
 
+  // 빈 자리가 있으면 랜덤으로 하나 선택
   if (availableMoves.length > 0) {
     const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
     const [x, y] = randomMove;
     stones[x][y] = 'white';
     drawStone(x + 1, y + 1, 'white');
+
+    // AI가 돌을 놓은 후 잡을 수 있으면 잡는다
+    if (isCaptured(x, y, 'white')) {
+      alert("AI가 흰돌을 잡았습니다!");
+    }
   }
 
   playerTurn = true;
