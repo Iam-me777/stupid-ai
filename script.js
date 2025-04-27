@@ -98,9 +98,13 @@ function evaluateMove(x, y) {
   if (checkCapture(x, y, 'black')) {
     score += 10;  // 상대 돌을 잡을 수 있는 곳
   }
+
+  // AI가 좀 더 중앙으로 가는 경향을 갖게 유도
+  if (x > size / 3 && x < (size * 2) / 3 && y > size / 3 && y < (size * 2) / 3) {
+    score += 5;  // 중앙 근처일수록 점수 증가
+  }
   
   return score;
 }
 
 drawBoard();
-
