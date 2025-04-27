@@ -27,6 +27,24 @@ function drawStone(x, y, color) {
   stoneSound.play();  // 바둑돌 소리 재생
 }
 
+function isCaptured(x, y, color) {
+  // 가로, 세로, 대각선으로 인접한 돌들을 검사
+  const directions = [
+    [-1, 0], [1, 0], [0, -1], [0, 1],  // 가로, 세로
+    [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
+  ];
+
+  for (const [dx, dy] of directions) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] !== color) {
+      // 먹을 수 있는 상대 돌 발견
+      return true;
+    }
+  }
+  return false;
+}
+
 canvas.addEventListener('click', (e) => {
   if (!playerTurn) return;
 
@@ -44,24 +62,43 @@ canvas.addEventListener('click', (e) => {
 });
 
 function aiMove() {
-  let empty = [];
+  let bestMove = null;
+  let bestScore = -Infinity;
 
+  // AI가 가장 좋은 자리를 선택하는 로직
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       if (!stones[i][j]) {
-        empty.push([i, j]);
+        // 돌을 놓을 수 있는 자리
+        stones[i][j] = 'white'; // 일단 돌 놓고
+        let score = evaluateMove(i, j); // 평가 함수 호출
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = [i, j];
+        }
+        stones[i][j] = null; // 돌 취소
       }
     }
   }
 
-  if (empty.length === 0) return;
-
-  // AI가 돌을 두기 가장 빈 곳 찾아서 둔다
-  const [i, j] = empty[Math.floor(Math.random() * empty.length)];
-  stones[i][j] = 'white';
-  drawStone(i + 1, j + 1, 'white');
+  if (bestMove) {
+    const [x, y] = bestMove;
+    stones[x][y] = 'white';
+    drawStone(x + 1, y + 1, 'white');
+  }
 
   playerTurn = true;
+}
+
+function evaluateMove(x, y) {
+  // AI의 승리 가능성을 고려해 점수 계산
+  let score = 0;
+
+  if (isCaptured(x, y, 'black')) {
+    score += 10; // 상대 돌을 잡을 수 있으면 높은 점수
+  }
+
+  return score;
 }
 
 drawBoard();
