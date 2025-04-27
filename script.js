@@ -27,22 +27,45 @@ function drawStone(x, y, color) {
   stoneSound.play();  // 바둑돌 소리 재생
 }
 
-function checkCapture(x, y, color) {
+function isCaptured(x, y, color) {
+  // 해당 위치에 돌을 두었을 때, 상대 돌이 잡히는지 확인하는 함수
   const directions = [
     [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
   ];
   
   let captured = false;
+  
+  // 상대방 돌의 색깔
+  const enemyColor = color === 'black' ? 'white' : 'black';
 
   for (const [dx, dy] of directions) {
     const nx = x + dx;
     const ny = y + dy;
     
-    if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] !== color && stones[nx][ny] !== null) {
-      captured = true;
+    // 범위 체크
+    if (nx >= 0 && ny >= 0 && nx < size && ny < size && stones[nx][ny] === enemyColor) {
+      // 상대 돌이 있다면, 해당 방향으로 다른 돌이 있는지 확인
+      let chainLength = 1;
+      let checkX = nx + dx;
+      let checkY = ny + dy;
+
+      while (checkX >= 0 && checkY >= 0 && checkX < size && checkY < size) {
+        if (stones[checkX][checkY] === enemyColor) {
+          chainLength++;
+        } else {
+          break;
+        }
+        checkX += dx;
+        checkY += dy;
+      }
+
+      if (chainLength >= 2) {
+        captured = true;
+      }
     }
   }
+
   return captured;
 }
 
@@ -95,7 +118,7 @@ function evaluateMove(x, y) {
   let score = 0;
 
   // AI가 돌을 놓았을 때 얻는 점수 계산
-  if (checkCapture(x, y, 'black')) {
+  if (isCaptured(x, y, 'black')) {
     score += 10;  // 상대 돌을 잡을 수 있는 곳
   }
 
