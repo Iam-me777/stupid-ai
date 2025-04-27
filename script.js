@@ -33,7 +33,7 @@ function isCaptured(x, y, color) {
     [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
     [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
   ];
-  
+
   const enemyColor = color === 'black' ? 'white' : 'black';
   let captured = false;
 
@@ -62,6 +62,64 @@ function isCaptured(x, y, color) {
   return captured;
 }
 
+function getBestMove() {
+  let bestMove = null;
+  let maxCaptured = 0;
+
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      if (!stones[i][j]) {
+        // AI가 놓을 수 있는 모든 자리를 검사
+        stones[i][j] = 'white'; // 임시로 백돌 놓기
+        const captured = countCapturedStones(i, j, 'white');
+        stones[i][j] = null; // 원래 상태로 복구
+
+        if (captured > maxCaptured) {
+          maxCaptured = captured;
+          bestMove = [i, j];
+        }
+      }
+    }
+  }
+
+  return bestMove;
+}
+
+function countCapturedStones(x, y, color) {
+  let capturedCount = 0;
+
+  // 상대 돌을 잡을 수 있는지 체크
+  const directions = [
+    [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
+    [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
+  ];
+
+  const enemyColor = color === 'black' ? 'white' : 'black';
+
+  for (const [dx, dy] of directions) {
+    let chainLength = 0;
+    let nx = x + dx;
+    let ny = y + dy;
+
+    while (nx >= 0 && ny >= 0 && nx < size && ny < size) {
+      if (stones[nx][ny] === enemyColor) {
+        chainLength++;
+      } else {
+        break;
+      }
+      nx += dx;
+      ny += dy;
+    }
+
+    // 2개 이상 연속된 적 돌이 있으면 잡히게 됨
+    if (chainLength > 1) {
+      capturedCount += chainLength;
+    }
+  }
+
+  return capturedCount;
+}
+
 canvas.addEventListener('click', (e) => {
   if (!playerTurn) return;
 
@@ -79,23 +137,10 @@ canvas.addEventListener('click', (e) => {
 });
 
 function aiMove() {
-  let bestMove = null;
+  let bestMove = getBestMove();  // AI가 가장 좋은 자리를 선택
 
-  // AI는 가장 빈 곳에 놓는 간단한 로직
-  let availableMoves = [];
-
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      if (!stones[i][j]) {
-        availableMoves.push([i, j]);
-      }
-    }
-  }
-
-  // 빈 자리가 있으면 랜덤으로 하나 선택
-  if (availableMoves.length > 0) {
-    const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
-    const [x, y] = randomMove;
+  if (bestMove) {
+    const [x, y] = bestMove;
     stones[x][y] = 'white';
     drawStone(x + 1, y + 1, 'white');
 
