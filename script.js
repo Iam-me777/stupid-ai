@@ -1,154 +1,85 @@
-const canvas = document.getElementById('board');
-const ctx = canvas.getContext('2d');
+const board = document.getElementById('board');
 const size = 19; // 19x19 바둑판
-const gridSize = canvas.width / (size + 1);
-const stones = Array.from({ length: size }, () => Array(size).fill(null));
-let playerTurn = true; // true = 너(흑), false = AI(백)
 
-const stoneSound = document.getElementById('stoneSound');  // 바둑돌 소리
+// 바둑판 셀 생성
+for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.row = row;
+        cell.dataset.col = col;
 
-function drawBoard() {
-  for (let i = 1; i <= size; i++) {
-    ctx.beginPath();
-    ctx.moveTo(gridSize, i * gridSize);
-    ctx.lineTo(size * gridSize, i * gridSize);
-    ctx.moveTo(i * gridSize, gridSize);
-    ctx.lineTo(i * gridSize, size * gridSize);
-    ctx.stroke();
-  }
-}
+        // 셀 클릭 이벤트
+        cell.addEventListener('click', function() {
+            placeStone(row, col);
+        });
 
-function drawStone(x, y, color) {
-  ctx.beginPath();
-  ctx.arc(x * gridSize, y * gridSize, gridSize / 2.5, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();
-  stoneSound.play();  // 바둑돌 소리 재생
-}
-
-function isCaptured(x, y, color) {
-  const directions = [
-    [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
-    [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
-  ];
-
-  const enemyColor = color === 'black' ? 'white' : 'black';
-  let captured = false;
-
-  // 기본적으로 한 방향으로 연속된 적 돌이 2개 이상이면 잡힌다
-  for (const [dx, dy] of directions) {
-    let chainLength = 0;
-    let nx = x + dx;
-    let ny = y + dy;
-
-    while (nx >= 0 && ny >= 0 && nx < size && ny < size) {
-      if (stones[nx][ny] === enemyColor) {
-        chainLength++;
-      } else {
-        break;
-      }
-      nx += dx;
-      ny += dy;
+        board.appendChild(cell);
     }
-
-    if (chainLength > 1) {
-      captured = true; // 잡힌 돌이 있으면 true
-      break;
-    }
-  }
-
-  return captured;
 }
 
-function getBestMove() {
-  let bestMove = null;
-  let maxCaptured = 0;
+// 바둑돌 놓기
+let currentPlayer = 'black'; // 처음에는 검은 돌
+const stones = []; // 바둑돌 정보 저장
 
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      if (!stones[i][j]) {
-        // AI가 놓을 수 있는 모든 자리를 검사
-        stones[i][j] = 'white'; // 임시로 백돌 놓기
-        const captured = countCapturedStones(i, j, 'white');
-        stones[i][j] = null; // 원래 상태로 복구
+function placeStone(row, col) {
+    const existingStone = stones.find(stone => stone.row === row && stone.col === col);
+    if (existingStone) return; // 이미 돌이 놓인 곳엔 놓을 수 없음
 
-        if (captured > maxCaptured) {
-          maxCaptured = captured;
-          bestMove = [i, j];
+    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    const stone = document.createElement('div');
+    stone.classList.add('stone', currentPlayer);
+    cell.appendChild(stone);
+
+    // 돌 정보 저장
+    stones.push({ row, col, color: currentPlayer });
+
+    // 잡힌 돌 처리
+    removeCapturedStones(row, col, currentPlayer);
+
+    // 턴 변경
+    currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+}
+
+// 돌 잡기 로직
+function removeCapturedStones(row, col, color) {
+    const opponentColor = color === 'black' ? 'white' : 'black';
+    
+    const directions = [
+        { dr: -1, dc: 0 }, // 위
+        { dr: 1, dc: 0 },  // 아래
+        { dr: 0, dc: -1 }, // 왼쪽
+        { dr: 0, dc: 1 }   // 오른쪽
+    ];
+
+    // 각 방향에 대해 탐색
+    for (let direction of directions) {
+        const capturedStones = [];
+        let r = row + direction.dr;
+        let c = col + direction.dc;
+
+        while (r >= 0 && r < size && c >= 0 && c < size) {
+            const stone = stones.find(stone => stone.row === r && stone.col === c);
+            if (stone) {
+                if (stone.color === opponentColor) {
+                    capturedStones.push(stone);
+                } else if (stone.color === color) {
+                    break; // 같은 색의 돌을 만나면 종료
+                }
+            }
+            r += direction.dr;
+            c += direction.dc;
         }
-      }
-    }
-  }
 
-  return bestMove;
+        // 잡힌 돌 처리
+        if (capturedStones.length > 0) {
+            for (let capturedStone of capturedStones) {
+                const capturedCell = document.querySelector(`[data-row="${capturedStone.row}"][data-col="${capturedStone.col}"]`);
+                capturedCell.innerHTML = ''; // 셀에서 돌 제거
+                const index = stones.indexOf(capturedStone);
+                if (index !== -1) stones.splice(index, 1); // 배열에서 돌 제거
+            }
+        }
+    }
 }
-
-function countCapturedStones(x, y, color) {
-  let capturedCount = 0;
-
-  const directions = [
-    [-1, 0], [1, 0], [0, -1], [0, 1], // 가로, 세로
-    [-1, -1], [1, 1], [-1, 1], [1, -1]  // 대각선
-  ];
-
-  const enemyColor = color === 'black' ? 'white' : 'black';
-
-  for (const [dx, dy] of directions) {
-    let chainLength = 0;
-    let nx = x + dx;
-    let ny = y + dy;
-
-    while (nx >= 0 && ny >= 0 && nx < size && ny < size) {
-      if (stones[nx][ny] === enemyColor) {
-        chainLength++;
-      } else {
-        break;
-      }
-      nx += dx;
-      ny += dy;
-    }
-
-    if (chainLength > 1) {
-      capturedCount += chainLength;
-    }
-  }
-
-  return capturedCount;
-}
-
-canvas.addEventListener('click', (e) => {
-  if (!playerTurn) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.round((e.clientX - rect.left) / gridSize);
-  const y = Math.round((e.clientY - rect.top) / gridSize);
-
-  if (x < 1 || y < 1 || x > size || y > size || stones[x - 1][y - 1]) return;
-
-  stones[x - 1][y - 1] = 'black';
-  drawStone(x, y, 'black');
-  playerTurn = false;
-
-  setTimeout(aiMove, 500); // AI 딜레이
-});
-
-function aiMove() {
-  let bestMove = getBestMove();  // AI가 가장 좋은 자리를 선택
-
-  if (bestMove) {
-    const [x, y] = bestMove;
-    stones[x][y] = 'white';
-    drawStone(x + 1, y + 1, 'white');
-
-    // AI가 돌을 놓은 후 잡을 수 있으면 잡는다
-    if (isCaptured(x, y, 'white')) {
-      alert("AI가 흰돌을 잡았습니다!");
-    }
-  }
-
-  playerTurn = true;
-}
-
-drawBoard();
 
